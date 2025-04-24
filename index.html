@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>TODO App</title>
+		<link rel="stylesheet" href="assets/styles.css" />
+	</head>
+
+	<body>
+		<div id="backdrop" class="hidden"></div>
+		<div class="delete-window hidden">
+			<button class="button confirm">Confirm</button>
+			<button class="button cancel">Cancel</button>
+		</div>	
+		<div class="container">
+			<header>
+				<h1>Task Manager</h1>
+			</header>
+
+			<div class="clock">
+				<span>Clock</span>
+			</div>
+			
+			<section class="todo-app">
+				<section class="layout">					
+					<aside class="search-filter-sort">
+						<input type="text" id="searchInput" placeholder="Search tasks..." />
+						
+						<select id="filterStatus">
+							<option value="all">All tasks</option>
+							<option value="due-soon">Due in &lt; 1 Day</option>
+							<option value="completed">Completed</option>
+							<option value="pending">Pending</option>
+						</select>
+						
+						<button id="sortAsc">Sort &uarr; due date</button>
+						<button id="sortDesc">Sort &darr; due date</button>
+						<button id="deleteAllTasks">Delete all tasks</button>
+					</aside>
+				</section>
+
+				<main class="main-content">
+					<section class="taskForm">
+						<h2>New Task</h2>
+						<form id="taskForm">
+							<div>
+								<input type="text" id="taskText" placeholder="Task description" required />
+							</div>
+
+							<div class="task-info">
+								<input type="text" id="taskDate" placeholder="Due date - default today" onfocus="(this.type='date')" onblur="(this.type='text')"
+								required />
+							
+								<select id="taskStatus" required>
+									<option value="pending" selected>Pending</option>
+									<option value="complete">Complete</option>
+								</select>
+
+								<select id="taskPriority" required>
+									<option value="high">High</option>
+									<option value="medium">Medium</option>
+									<option value="low" selected>Low</option>
+								</select>
+							</div>
+
+							<div class="control">
+								<button class="save" type="submit">Save</button>
+								<button class="close" type="submit">Close</button>
+							</div>						
+						</form>
+					</section>
+					
+					<section class="taskList">
+						<h2>Task List</h2>
+						<table>
+							<thead>
+								<tr>
+									<th>Due date</th>
+									<th>Task</th>
+									<th>Status</th>
+									<th>Priority</th>
+									<th>Date created</th>
+									<th></th>
+								</tr>
+							</thead>
+							<tbody class="tableBody">
+								<!-- Dynamic tasks will be inserted here -->
+							</tbody>
+						</table>
+					</section>
+				</main>
+			</section>
+		</div>
+
+		<script src="assets/app.js"></script>
+	</body>
+
+</html>
