@@ -8,10 +8,13 @@ const close = document.querySelector(".close");
 const backdrop = document.getElementById("backdrop");
 const deleteWindow = document.querySelector(".delete-window");
 const deleteAllTasksBtn = document.querySelector("#deleteAllTasks");
+const sortAscBtn = document.querySelector("#sortAsc");
+const sortDescBtn = document.querySelector("#sortDesc");
+const taskDate = document.getElementById("taskDate");
 
 let editedRow = null;
-
-// tableBody.innerHTML = "";
+let dateInputChanged = false;
+let changedDate = "";
 
 // Event listeners
 document.addEventListener("DOMContentLoaded", getDataFromLocalStorage);
@@ -19,6 +22,7 @@ deleteAllTasksBtn.addEventListener("click", deleteAllTasks);
 
 save.addEventListener("click", function (e) {
   e.preventDefault();
+
   const formHeading = document.querySelector(".taskForm h2").textContent;
 
   if (formHeading == "Edit Task") {
@@ -27,6 +31,7 @@ save.addEventListener("click", function (e) {
     addTask();
   }
 });
+
 tableBody.addEventListener("click", (e) => {
   if (e.target && e.target.classList.contains("edit-btn")) {
     openTaskToEdit(e);
@@ -34,8 +39,31 @@ tableBody.addEventListener("click", (e) => {
     deleteTask(e);
   }
 });
-close.addEventListener("click", resetForm);
 
+taskDate.addEventListener("input", (e) => {
+  const inputValue = e.target.value;
+  if (inputValue) {
+    changedDate = formatDateForDisplayChangedInput(inputValue);
+    dateInputChanged = true;
+  }
+});
+
+close.addEventListener("click", (e) => {
+  e.preventDefault();
+  resetForm();
+});
+
+sortAscBtn.addEventListener("click", (e) => {
+  e.preventDefault();
+  sortTasksAsc(allTasks);
+});
+
+sortDescBtn.addEventListener("click", (e) => {
+  e.preventDefault();
+  sortTasksDesc(allTasks);
+});
+
+// Functions
 function getDataFromLocalStorage() {
   const data = localStorage.getItem("storedTasks");
   if (!data) {
@@ -68,41 +96,49 @@ function clearTaskInputFields() {
   document.getElementById("taskForm").reset();
 }
 
-function getFormattedDate() {
+function getDueDateValue(date) {
+  // date is provided by new Date()
+
+  // dueDateValue is a date manually entered using date picker
   let dueDateValue = document.getElementById("taskDate").value;
-  dueDateValue = dueDateValue ? dueDateValue : new Date();
-  let dueDateFormatted;
-  if (dueDateValue) {
-    const dueDateObj = new Date(dueDateValue);
-    const formatter = new Intl.DateTimeFormat("en-GB");
-    dueDateFormatted = formatter.format(dueDateObj);
-    return dueDateFormatted;
-  } else {
-    return "";
+  let manualDate = new Date(dueDateValue);
+  manualDate = manualDate.toLocaleDateString();
+
+  let value = dueDateValue ? manualDate : date.toLocaleDateString();
+
+  // Either the date manually entered, or automatically generated
+  return value;
+}
+
+// Utility functions to format date display
+function formatDateForDisplayUnchangedInput(dateString) {
+  if (dateString.includes("/")) {
+    const [a, b, c] = dateString.split("/");
+
+    if (c.length == 4) {
+      return `${a}/${b}/${c}`;
+    } else if (a.length == 4) {
+      return `${c}/${b}/${a}`;
+    }
+  } else if (dateString.includes("-")) {
+    const [a, b, c] = dateString.split("-");
+
+    if (c.length == 4) {
+      return `${a}/${b}/${c}`;
+    } else if (a.length == 4) {
+      return `${c}/${b}/${a}`;
+    }
   }
 }
 
-// Add task
-function addTask() {
-  const now = new Date();
-  // let dueDate = document.getElementById("taskDate").value;
-  // const dueDateEls = dueDate.split("-");
-  // const [year, month, date] = dueDateEls;
-  // dueDate = `${date}/${month}/${year}`;
-
-  const newTask = {
-    dueDate: getFormattedDate(),
-    taskText: document.getElementById("taskText").value,
-    taskStatus: document.getElementById("taskStatus").value,
-    taskPriority: document.getElementById("taskPriority").value,
-    createdDate: now.toLocaleDateString(),
-    timeCreated: now.toLocaleTimeString(),
-  };
-
-  allTasks.push(newTask);
-  saveDataToLocalStorage(allTasks);
-  displayTasks(allTasks);
-  clearTaskInputFields();
+function formatDateForDisplayChangedInput(dateString) {
+  if (dateString.includes("-")) {
+    const [year, month, day] = dateString.split("-");
+    return `${day}/${month}/${year}`;
+  } else if (dateString.includes("/")) {
+    const [year, month, day] = dateString.split("/");
+    return `${day}/${month}/${year}`;
+  }
 }
 
 // Display tasks in table
@@ -124,6 +160,25 @@ function displayTasks(taskList) {
     `;
     tableBody.innerHTML += markup;
   }
+}
+
+// Add task
+function addTask() {
+  const now = new Date();
+
+  const newTask = {
+    dueDate: getDueDateValue(now),
+    taskText: document.getElementById("taskText").value,
+    taskStatus: document.getElementById("taskStatus").value,
+    taskPriority: document.getElementById("taskPriority").value,
+    createdDate: now.toLocaleDateString(),
+    timeCreated: now.toLocaleTimeString(),
+  };
+
+  allTasks.push(newTask);
+  saveDataToLocalStorage(allTasks);
+  displayTasks(allTasks);
+  clearTaskInputFields();
 }
 
 function openTaskToEdit(e) {
@@ -152,9 +207,15 @@ function openTaskToEdit(e) {
 }
 
 function saveEditedTask() {
+  let currentDateRaw = document.getElementById("taskDate").value;
+
+  const currentDate = currentDateRaw
+    ? formatDateForDisplayUnchangedInput(currentDateRaw)
+    : "";
+
   const rowForEditing = editedRow - 1;
   const editedTask = {
-    dueDate: getFormattedDate(),
+    dueDate: dateInputChanged ? changedDate : currentDate,
     taskText: document.getElementById("taskText").value,
     taskStatus: document.getElementById("taskStatus").value,
     taskPriority: document.getElementById("taskPriority").value,
@@ -166,6 +227,10 @@ function saveEditedTask() {
   saveDataToLocalStorage(allTasks);
   resetForm();
   clearTaskInputFields();
+
+  // Optionally reset flag after saving
+  dateInputChanged = false;
+  changedDate = "";
 }
 
 function confirmDelete(taskList, index) {
@@ -182,7 +247,6 @@ function cancelDelete() {
 }
 
 function deleteTask(e) {
-  console.log("Deleting task");
   if (e.target && e.target.classList.contains("delete-btn")) {
     const taskRow = e.target.closest("tr");
     listIndex = taskRow.rowIndex - 1;
@@ -207,10 +271,23 @@ function resetForm() {
 }
 
 function deleteAllTasks() {
-  console.log("Deleting all tasks");
   allTasks = [];
   saveDataToLocalStorage(allTasks);
   displayTasks(allTasks);
+}
+
+function sortTasksAsc(taskList) {
+  const sorted = taskList
+    .slice()
+    .sort((a, b) => new Date(a.dueDate) - new Date(b.dueDate));
+  displayTasks(sorted);
+}
+
+function sortTasksDesc(taskList) {
+  const sorted = taskList
+    .slice()
+    .sort((a, b) => new Date(b.dueDate) - new Date(a.dueDate));
+  displayTasks(sorted);
 }
 
 // Update clock immediately and every second
